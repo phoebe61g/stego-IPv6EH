@@ -1,0 +1,3 @@
+Here are several files for testing the transmission.
+Any binary file, such as text, audio, or video, can be sent. This text file is also a sample.
+Hello Word!
