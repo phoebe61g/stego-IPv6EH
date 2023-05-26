@@ -3,29 +3,19 @@ import sys
 import time
 import socket
 from scapy.all import *
+import sniffer
 # Sniff the packets
 s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(3))
-s.bind(('ens160', 0))
-frame_buff = []
+s.bind((str(conf.iface), 0))
 timelimit = int(sys.argv[1])
 start = time.time() # Timer
 print("Start sniffing...")
-while (time.time() - start) < timelimit: 
-    frame, addr = s.recvfrom(512)
-    if frame[12:14] == b'\x86\xdd': # Filter for IPv6
-        frame_buff.append(frame)
+frame_buff = sniffer.sniff_ip6(s, start, timelimit)
 s.close()
 print("Stop sniffing. Start collecting data...")
 # Collect if they're DNS packets
 timestamp = time.time()
-pkts_buff = []
-for frame in frame_buff:
-    pkt = Ether(frame) # Normalize to Scapy packet format
-    try:
-        if pkt.getlayer(UDP).dport == 53:
-            pkts_buff.append(pkt)
-    except:
-        pass
+pkts_buff = sniffer.filter_dns(frame_buff)
 if pkts_buff:
     pktl = PacketList(pkts_buff)
 else:
