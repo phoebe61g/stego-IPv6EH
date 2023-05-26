@@ -3,13 +3,12 @@ import sys
 import time
 import socket
 from scapy.all import *
-# Dst: NCNU Ubuntu DNS Server
-dnsMAC = b'\x00\x0c\x29\xc3\x6f\xa7'
-dnsIP = '2001:e10:6840:22:20c:29ff:fec3:6fa7'
-# Src: NCNU Local Host
-clientMAC = b'\x00\x50\x56\x87\xa2\xaf'
-clientIP = '2001:e10:6840:22:250:56ff:fe87:a2af'
+import getinfo
+# Src
+clientMAC, clientIP = getinfo.src_fields()
 ethertype = b"\x86\xdd" # IPv6
+# Dst
+dnsMAC, dnsIP = getinfo.dst_fields()
 whohas = sys.argv[2] # Ask for DNS Record
 # Process the binary file to send
 start = time.time() # Timer
