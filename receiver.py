@@ -11,6 +11,7 @@ timelimit = int(sys.argv[1])
 start = time.time() # Timer
 print("Start sniffing...")
 frame_buff = sniffer.sniff_ip6(s, start, timelimit)
+#pkts_buff = sniffer.sniff_ip6_dns(s, start, timelimit)
 s.close()
 print("Stop sniffing. Start collecting data...")
 # Collect if they're DNS packets
@@ -22,7 +23,9 @@ else:
     exit() # No special packets received
 print(pktl.summary)
 # Extract the data from packets
-filename = ""
+RR = pktl[0].getlayer(DNS).qd.qname.split(b'.')
+filename = RR[0] + b'.' + RR[1]
+print(filename)
 collect_data = b''
 data_buff = {}
 error_cnt = 0
@@ -31,10 +34,7 @@ for pkt in pktl:
         padn = pkt.getlayer(IPv6ExtHdrDestOpt).options[0]
         data = padn.optdata
         dnsID = pkt.getlayer(DNS).id
-        if dnsID == 0:
-            filename = data
-        else:
-            data_buff[dnsID - 1] = data
+        data_buff[dnsID] = data
     except:
         pass
 # Combine data into a binary file
