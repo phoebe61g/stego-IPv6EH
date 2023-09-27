@@ -1,21 +1,36 @@
 import socket
 import time
 from scapy.all import *
-def sniff_ip6_dns(s, start, timelimit):
+
+def sniff_cnt_ip6_dns(s):
+    filename = b''
+    query_cnt = 0
     pkts_buff = []
-    while (time.time() - start) < timelimit:
+    while True:
         frame, addr = s.recvfrom(512)
-        try:
+        if frame[12:14] == b'\x86\xdd':
             pkt = Ether(frame)
-            dnsHeader = pkt.getlayer(DNS)
-            dnsID = dnsHeader.id
-            dnsRecord = dnsHeader.qd.qname
-            srcIP = pkt.getlayer(IPv6).src
-            fake_answer(srcIP, dnsID, dnsRecord)
-            pkts_buff.append(pkt)
-        except:
-            pass
-    return pkts_buff
+            if len(pkts_buff) == 0:
+                try:
+                    RR = pkt.getlayer(DNS).qd.qname.split(b'.')
+                    filename = RR[0] + b'.' + RR[1]
+                    query_cnt = RR[2]
+                    pkts_buff.append(pkt)
+                    print("Filename: {}".format(filename))
+                    print("Num of queries: {}".format(int(query_cnt)))
+                except:
+                    continue
+            else:
+                try:
+                    if pkt.getlayer(UDP).dport == 53:
+                        pkts_buff.append(pkt)
+                        print("Packets sniffed: {}".format(len(pkts_buff)), end = '\r')
+                        if len(pkts_buff) >= int(query_cnt):
+                            break
+                except:
+                    continue
+    print("Packets sniffed: {}".format(len(pkts_buff)))
+    return filename, pkts_buff
 
 def sniff_ip6(s, start, timelimit):
     frame_buff = []
