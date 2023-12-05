@@ -8,5 +8,5 @@ def encoder(orgdata, rsc):
     return encdata
 
 def decoder(rcvdata, rsc):
-    decdata = rsc.decode(rcvdata)
+    decdata = rsc.decode(rcvdata)[0]
     return decdata

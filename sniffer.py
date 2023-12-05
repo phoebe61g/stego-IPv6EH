@@ -14,24 +14,26 @@ def sniff_cnt_ip6_dns(s):
                 try:
                     RR = pkt.getlayer(DNS).qd.qname.split(b'.')
                     filename = RR[0] + b'.' + RR[1]
-                    query_cnt = RR[2]
+                    cw_cnt = int(RR[2]) 
+                    query_cnt = cw_cnt * 16
+                    redun = int(RR[4])
                     pkts_buff.append(pkt)
-                    print("Filename: {}".format(filename))
-                    print("Num of queries: {}".format(int(query_cnt)))
+                    print("--> Filename: {}".format(filename))
+                    print("--> Num of queries expect to recv: {}".format(query_cnt))
                 except:
                     continue
             else:
                 try:
                     if pkt.getlayer(UDP).dport == 53:
                         pkts_buff.append(pkt)
-                        print("Packets sniffed: {}".format(len(pkts_buff)), end = '\r')
-                        if len(pkts_buff) >= int(query_cnt):
+                        print(">>> Packets sniffed: {}".format(len(pkts_buff)), end = '\r')
+                        if len(pkts_buff) >= query_cnt:
                             break
                 except:
                     continue
-    print("Packets sniffed: {}".format(len(pkts_buff)))
-    return filename, pkts_buff
+    return filename, cw_cnt, pkts_buff, redun
 
+'''
 def sniff_ip6(s, start, timelimit):
     frame_buff = []
     while (time.time() - start) < timelimit:
@@ -58,3 +60,4 @@ def fake_answer(srcIP, dnsID, name):
     ans.qd = DNSQR(qname=name, qtype="A")
     ans.an = DNSRR(rrname=name, type="A", rdata="10.22.149.1")
     send(IPv6(dst=srcIP)/UDP(sport=53, dport=53)/ans, verbose=0)
+'''
