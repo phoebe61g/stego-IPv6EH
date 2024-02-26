@@ -2,27 +2,42 @@ import socket
 import time
 from scapy.all import *
 
-def sniff_cnt_ip6_dns(s):
+def sniff_ip6_DstEH(s):
+    frame_buff = []
+    while True:
+        frame, addr = s.recvfrom(512)
+        if frame[20] == 60: # next hdr is dst opt eh (protocol num: 60)
+            frame_buff.append(frame)
+            idle_time = time.time() # renew timer
+        else:
+            try:
+                if time.time() - idle_time > 5: # if idle time > 5 sec
+                    break
+            except:
+                continue
+    return frame_buff
+
+def sniff_ip6_dns(s):
     filename = b''
     query_cnt = 0
     pkts_buff = []
     while True:
-        frame, addr = s.recvfrom(512)
-        if frame[12:14] == b'\x86\xdd':
+        frame, addr = s.recvfrom(512) # recv a packet
+        if frame[12:14] == b'\x86\xdd': # If it's IPv6 packet.
             pkt = Ether(frame)
-            if len(pkts_buff) == 0:
+            if len(pkts_buff) == 0: # Get filename & cw_cnt & last from the first pkt.
                 try:
                     RR = pkt.getlayer(DNS).qd.qname.split(b'.')
                     filename = RR[0] + b'.' + RR[1]
                     cw_cnt = int(RR[2]) 
                     query_cnt = cw_cnt * 16
-                    redun = int(RR[4])
+                    last = int(RR[4])
                     pkts_buff.append(pkt)
                     print("--> Filename: {}".format(filename))
                     print("--> Num of queries expect to recv: {}".format(query_cnt))
                 except:
                     continue
-            else:
+            else: # Only get data if it's not the first okt.
                 try:
                     if pkt.getlayer(UDP).dport == 53:
                         pkts_buff.append(pkt)
@@ -31,9 +46,8 @@ def sniff_cnt_ip6_dns(s):
                             break
                 except:
                     continue
-    return filename, cw_cnt, pkts_buff, redun
+    return filename, cw_cnt, pkts_buff, last
 
-'''
 def sniff_ip6(s, start, timelimit):
     frame_buff = []
     while (time.time() - start) < timelimit:
@@ -42,6 +56,7 @@ def sniff_ip6(s, start, timelimit):
              frame_buff.append(frame)
     return frame_buff
 
+'''
 def filter_dns(frame_buff):
     pkts_buff = []
     for frame in frame_buff:
