@@ -11,7 +11,7 @@ def sniff_ip6_DstEH(s):
             idle_time = time.time() # renew timer
         else:
             try:
-                if time.time() - idle_time > 5: # if idle time > 5 sec
+                if time.time() - idle_time > 3: # if idle time > 5 sec
                     break
             except:
                 continue

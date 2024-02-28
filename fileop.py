@@ -10,3 +10,10 @@ def bin_split(filename):
         msglist[cnt-1] = msglist[cnt-1] + addzero
     bin_file.close()
     return msglist, cnt, last
+
+def bin_collect(decdata, cw_cnt, last):
+    collect_data = b''
+    for i in range(cw_cnt - 1):
+        collect_data = collect_data + decdata[i]
+    collect_data = collect_data + decdata[cw_cnt - 1][:last]
+    return collect_data

@@ -1,10 +1,8 @@
 #!/usr/bin/python
-import sys
 import time
 import socket
 from scapy.all import *
-import sniffer
-import dataop
+import sniffer, dataop, fileop
 import reedsolomon as rs
 codec = rs.set_codec(255, 223)
 # Sniff the packets
@@ -15,14 +13,10 @@ T_sniff = time.time() # Timer
 frame_buff = sniffer.sniff_ip6_DstEH(s)
 s.close()
 # Extract the data from packets
-print("Start extracting data...")
+print("Sniffed {} frames. Start extracting data...".format(len(frame_buff)))
 T_extract = time.time()
-pkts_buff = dataop.convert_frame_pkt(frame_buff)
-pktl = PacketList(pkts_buff)
-print(pktl.summary)
-filename, cw_cnt, last = dataop.extract_RR(pktl[0])
-encdata_buff = dataop.extract_data(pktl, cw_cnt)
-#dataop.find_missing_cw(encdata_buff)
+filename, cw_cnt, last = dataop.extract_RR(Ether(frame_buff[0]))
+encdata_buff = dataop.extract_data(frame_buff, cw_cnt)
 # Decoding
 print("Start decoding data...")
 T_decode = time.time()
@@ -33,14 +27,10 @@ for cw_index in range(cw_cnt):
         decdata.append(rs.decoder(codeword, codec))
     except:
         print("Codeword[{}] couldn't be decoded.".format(cw_index))
-        print("Size: {}".format(len(codeword)))
 # Combine data and write into a binary file
 print("Start generating the org file...")
 T_file = time.time()
-collect_data = b''
-for i in range(cw_cnt - 1):
-        collect_data = collect_data + decdata[i]
-collect_data = collect_data + decdata[cw_cnt - 1][:last]
+collect_data = fileop.bin_collect(decdata, cw_cnt, last)
 rebuild = open(filename, 'wb+')
 rebuild.write(collect_data)
 rebuild.close()
