@@ -1,12 +1,12 @@
 from scapy.all import *
-
+'''
 def convert_frame_pkt(frame_buff):
     pkts_buff = []
     for frame in frame_buff:
         pkt = Ether(frame)
         pkts_buff.append(pkt)
     return pkts_buff
-
+'''
 def extract_RR(pkt):
     try:
         RR = pkt.getlayer(DNS).qd.qname.split(b'.')
@@ -17,10 +17,11 @@ def extract_RR(pkt):
         print("RR not found.")
     return filename, cw_cnt, last
 
-def extract_data(pktl, cw_cnt):
+def extract_data(frame_buff, cw_cnt):
     data_buff = ([b'0'*16] * 15 + [b'0'*15]) * cw_cnt
-    for pkt in pktl:
+    for frame in frame_buff:
         try:
+            pkt = Ether(frame)
             # Data
             padn = pkt.getlayer(IPv6ExtHdrDestOpt).options[0]
             data = padn.optdata # 16-bytes
