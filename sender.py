@@ -7,15 +7,15 @@ codec = rs.set_codec(255, 223)
 print("Start slicing data...")
 T_slice = time.time() # Timer
 filename = sys.argv[1]
-msg_list, last = fileop.bin_split(filename)
+data_list, last = fileop.bin_split(filename)
 print("Done.")
 # RS Encoder
 cw_list = []
-data_cnt = len(msg_list)
+data_cnt = len(data_list)
 print("Start encoding...")
 T_encode = time.time() # Timer
 for i in range(data_cnt): 
-    codeword = rs.encoder(msg_list[i], codec) 
+    codeword = rs.encoder(data_list[i], codec) 
     # Codeword Slicing
     cw_slice = [codeword[i:i+16] for i in range(0, len(codeword), 16)]
     cw_list.append(cw_slice)
