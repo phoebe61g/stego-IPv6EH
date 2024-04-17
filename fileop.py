@@ -1,15 +1,16 @@
 def bin_split(filename):
     bin_file = open(filename, "rb")
     raw_bytes = bin_file.read()
-    n = 223 # Split the message into 223 bytes per group.
+    # Split the message into 223 bytes per group.
+    n = 223
     msglist = [raw_bytes[i:i+n] for i in range(0, len(raw_bytes), n)]
-    cnt = len(msglist)
-    if len(raw_bytes) % n != 0: # If the last group shorter than 223 bytes, add zero-bytes for padding.
-        last = len(msglist[cnt-1])
-        addzero = b'0' * (n - last)
-        msglist[cnt-1] = msglist[cnt-1] + addzero
+    # If the last group shorter than 223 bytes, add zero-bytes for padding.
+    last = len(raw_bytes) % n
+    if last != 0:
+        padding = b'0' * (n - last)
+        msglist[-1] = msglist[-1] + padding
     bin_file.close()
-    return msglist, cnt, last
+    return msglist, last
 
 def bin_collect(decdata, cw_cnt, last):
     collect_data = b''

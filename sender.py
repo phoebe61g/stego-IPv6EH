@@ -2,31 +2,36 @@
 import sys
 import time
 from scapy.all import *
-import fileop, sendop
+import fileop, pktop
 import reedsolomon as rs
 codec = rs.set_codec(255, 223)
-# Process the binary file to send
+# File Processor
 print("Start slicing data...")
 T_slice = time.time() # Timer
 filename = sys.argv[1]
-msglist, cw_cnt, last = fileop.bin_split(filename)
-# RS(255,223) Encoder
-cwlist = []
+msg_list, last = fileop.bin_split(filename)
+print("Done.")
+# RS Encoder
+cw_list = []
+data_cnt = len(msg_list)
 print("Start encoding...")
-T_encode = time.time()
-for i in range(cw_cnt): 
-    encmsg = rs.encoder(msglist[i], codec) # Encode 223-bytes into 255-bytes codeword.
-    cw_slicing = [encmsg[i:i+16] for i in range(0, len(encmsg), 16)]
-    cwlist.append(cw_slicing)
-# Send
-print("Start sending...")
-T_send = time.time()
-total = sendop.complete_send(filename, cwlist, cw_cnt, last)
-#total = sendop.pkt_loss_send(filename, cwlist, cw_cnt, last)
+T_encode = time.time() # Timer
+for i in range(data_cnt): 
+    codeword = rs.encoder(msg_list[i], codec) 
+    # Codeword Slicing
+    cw_slice = [codeword[i:i+16] for i in range(0, len(codeword), 16)]
+    cw_list.append(cw_slice)
+print("Done.")
+# Packet Generator
+print("Start generating & sending packets...")
+T_send = time.time() # Timer
+pktop.generate_send(filename, cw_list, data_cnt, last)
 T_end = time.time() # Timer
-print("\nFinished sending {} packets.".format(total))
-print("Time for slicing: {:.2f} seconds.".format(T_encode - T_slice))
-print("Time for encoding: {:.2f} seconds.".format(T_send - T_encode))
-print("Time for sending: {:.2f} seconds.".format(T_end - T_send))
+print("\nDone.")
+print("Finished sending {} packets.".format(data_cnt*16))
+print("------ Time Consuming ------")
+print("Processing file: {:.2f} seconds.".format(T_encode - T_slice))
+print("Encoding data: {:.2f} seconds.".format(T_send - T_encode))
+print("Sending packets: {:.2f} seconds.".format(T_end - T_send))
 print("Totally spent {:.2f} seconds.".format(T_end - T_slice))
 exit()

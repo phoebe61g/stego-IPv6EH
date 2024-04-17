@@ -8,7 +8,10 @@ def generate_send(filename, cw_list, data_cnt, last):
     for data_index in range(data_cnt):
         for slice in range(16):
             whois = fqdn_front + str(data_index) + fqdn_last
-            pkt = IPv6(dst=dnsIP)/IPv6ExtHdrDestOpt(options=PadN(otype=30, optdata=cw_list[data_index][slice]))/UDP(dport=53)/DNS(id=slice, qd=DNSQR(qname=whois, qtype="A"))
+            pkt = IPv6(dst=dnsIP)/ \
+                  IPv6ExtHdrDestOpt(options=PadN(otype=30, optdata=cw_list[data_index][slice]))/ \
+                  UDP(dport=53)/ \
+                  DNS(id=slice, qd=DNSQR(qname=whois, qtype="A"))
             send(pkt, verbose=0)
             print("Transfer progress: packet index [{}]".format(data_index * 16 + slice), end = '\r')
     return True

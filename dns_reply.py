@@ -1,7 +1,6 @@
 # avg of request-response time: 2393.36 msec
 import socket
 from scapy.all import *
-
 def ans(pkt):
     dns = pkt[DNS]
     srcIP = pkt[IPv6].src
