@@ -1,7 +1,5 @@
 #!/usr/bin/python
-import sys
-import time
-from scapy.all import *
+import sys, time
 import fileop, pktop
 import reedsolomon as rs
 codec = rs.set_codec(255, 223)

@@ -7,7 +7,8 @@ def convert_frame_pkt(frame_buff):
         pkts_buff.append(pkt)
     return pkts_buff
 '''
-def extract_RR(pkt):
+def extract_RR(frame):
+    pkt = Ether(frame)
     try:
         RR = pkt.getlayer(DNS).qd.qname.split(b'.')
         filename = RR[0] + b'.' + RR[1]
@@ -17,8 +18,8 @@ def extract_RR(pkt):
         print("RR not found.")
     return filename, cw_cnt, last
 
-def extract_data(frame_buff, cw_cnt):
-    data_buff = ([b'0'*16] * 15 + [b'0'*15]) * cw_cnt
+def extract_cw(frame_buff, cw_cnt):
+    cw_list = ([b'0'*16] * 15 + [b'0'*15]) * cw_cnt
     for frame in frame_buff:
         try:
             pkt = Ether(frame)
@@ -30,10 +31,10 @@ def extract_data(frame_buff, cw_cnt):
             dnsID = pkt.getlayer(DNS).id
             index = int(RR[3]) * 16 + dnsID
             # Collect in buffer
-            data_buff[index] = data
+            cw_list[index] = data
         except:
             pass
-    return data_buff
+    return cw_list
 
 def find_missing_cw(data_buff):
     for index in range(len(data_buff)):

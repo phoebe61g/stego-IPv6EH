@@ -18,3 +18,9 @@ def bin_collect(decdata, cw_cnt, last):
         collect_data = collect_data + decdata[i]
     collect_data = collect_data + decdata[cw_cnt - 1][:last]
     return collect_data
+
+def generate(filename, collect_data):
+    bin_file = open(filename, 'wb+')
+    bin_file.write(collect_data)
+    bin_file.close()
+    return True
