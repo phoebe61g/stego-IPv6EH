@@ -29,11 +29,13 @@ for chunk_num in range(cw_cnt):
         count = N//T + 1
         codeword = b''.join(cw_list[chunk_num * count:chunk_num * count + count]) 
         chunk = rs.decoder(codeword, codec)
+        if chunk_num == (cw_cnt - 1):
+            chunk = chunk[:K - pad_bytes]
         bin_file.write(chunk)
     except:
         print("Codeword[{}] couldn't be decoded.".format(chunk_num))
 bin_file.close()
-fileop.del_padding(filename, pad_bytes)
+#fileop.del_padding(filename, pad_bytes)
 T_end = time.time()
 print("Done.")
 
