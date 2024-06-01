@@ -3,14 +3,22 @@ def bin_split(filename):
     raw_bytes = bin_file.read()
     # Split the message into 223 bytes per group.
     n = 223
-    msglist = [raw_bytes[i:i+n] for i in range(0, len(raw_bytes), n)]
+    data_list = [raw_bytes[i:i+n] for i in range(0, len(raw_bytes), n)]
     # If the last group shorter than 223 bytes, add zero-bytes for padding.
     last = len(raw_bytes) % n
     if last != 0:
         padding = b'0' * (n - last)
-        msglist[-1] = msglist[-1] + padding
+        data_list[-1] = data_list[-1] + padding
     bin_file.close()
-    return msglist, last
+    return data_list, last
+
+def del_padding(filename, num_bytes):
+    with open(filename, 'rb') as file:
+        file.seek(0, 2) 
+        file_size = file.tell()
+    new_size = max(file_size - num_bytes, 0)
+    with open(filename, 'ab') as file:
+        file.truncate(new_size)
 
 def bin_collect(decdata, cw_cnt, last):
     collect_data = b''
@@ -39,3 +47,8 @@ def reader(filename, chunksize):
     return data_list, padding
 
 
+def generate(filename, collect_data):
+    bin_file = open(filename, 'wb+')
+    bin_file.write(collect_data)
+    bin_file.close()
+    return True

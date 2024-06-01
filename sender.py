@@ -1,7 +1,5 @@
 #!/usr/bin/python
-import sys
-import time
-from scapy.all import *
+import sys, time
 import fileop, pktop
 import reedsolomon as rs
 from config import N, K, T, Timer
@@ -10,6 +8,7 @@ codec = rs.set_codec(N, K)
 print("Start slicing data...")
 T_slice = time.time() # Timer
 filename = sys.argv[1]
+<<<<<<< HEAD
 data_list, padding = fileop.reader(filename, K)
 print("Done.")
 # RS Encoder
@@ -18,6 +17,17 @@ print("Start encoding...")
 T_encode = time.time() # Timer
 for chunk in data_list: 
     codeword = rs.encoder(chunk, codec) 
+=======
+data_list, last = fileop.bin_split(filename)
+print("Done.")
+# RS Encoder
+cw_list = []
+data_cnt = len(data_list)
+print("Start encoding...")
+T_encode = time.time() # Timer
+for i in range(data_cnt): 
+    codeword = rs.encoder(data_list[i], codec) 
+>>>>>>> 02c986ef7d8243a473b2f9f9826dcf0dd9d09eea
     # Codeword Slicing
     cw_slice = [codeword[i:i+16] for i in range(0, len(codeword), 16)]
     cw_list.append(cw_slice)
