@@ -4,20 +4,20 @@ import time
 from scapy.all import *
 import fileop, pktop
 import reedsolomon as rs
-codec = rs.set_codec(255, 223)
+from config import N, K, T, Timer
+codec = rs.set_codec(N, K)
 # File Processor
 print("Start slicing data...")
 T_slice = time.time() # Timer
 filename = sys.argv[1]
-msg_list, last = fileop.bin_split(filename)
+data_list, padding = fileop.reader(filename, K)
 print("Done.")
 # RS Encoder
 cw_list = []
-data_cnt = len(msg_list)
 print("Start encoding...")
 T_encode = time.time() # Timer
-for i in range(data_cnt): 
-    codeword = rs.encoder(msg_list[i], codec) 
+for chunk in data_list: 
+    codeword = rs.encoder(chunk, codec) 
     # Codeword Slicing
     cw_slice = [codeword[i:i+16] for i in range(0, len(codeword), 16)]
     cw_list.append(cw_slice)
@@ -25,10 +25,11 @@ print("Done.")
 # Packet Generator
 print("Start generating & sending packets...")
 T_send = time.time() # Timer
-pktop.generate_send(filename, cw_list, data_cnt, last)
+cw_cnt = len(cw_list)
+pktop.generate_send(filename, cw_list, cw_cnt, padding)
 T_end = time.time() # Timer
 print("\nDone.")
-print("Finished sending {} packets.".format(data_cnt*16))
+print("Finished sending {} packets.".format(cw_cnt*16))
 print("------ Time Consuming ------")
 print("Processing file: {:.2f} seconds.".format(T_encode - T_slice))
 print("Encoding data: {:.2f} seconds.".format(T_send - T_encode))

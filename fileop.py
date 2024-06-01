@@ -18,3 +18,24 @@ def bin_collect(decdata, cw_cnt, last):
         collect_data = collect_data + decdata[i]
     collect_data = collect_data + decdata[cw_cnt - 1][:last]
     return collect_data
+
+def reader(filename, chunksize):
+    data_list = []
+    padding = 0
+    bin_file = open(filename, "rb")
+    while True:
+        chunk = bin_file.read(chunksize)
+        length = len(chunk)
+        if length == chunksize:
+            data_list.append(chunk)
+        elif length == 0:
+            break
+        else:
+            padding = chunksize - length
+            chunk = chunk + (b'0' * padding)
+            data_list.append(chunk)
+            break
+    bin_file.close()
+    return data_list, padding
+
+

