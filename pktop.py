@@ -1,9 +1,9 @@
 import time
 import socket
-import getinfo
+import config
 from scapy.all import *
 def generate_send(filename, cw_list, data_cnt, last):
-    dnsIP = getinfo.dst_addrs()
+    dnsIP = config.dst_addrs()
     fqdn_front = filename + '.' + str(data_cnt) + '.'
     fqdn_last = '.' + str(last) + '.pearl.org'
     print("FQDN --> {}<data_index>{}".format(fqdn_front, fqdn_last))
@@ -19,7 +19,7 @@ def generate_send(filename, cw_list, data_cnt, last):
     return True
 
 def pkt_loss_send(filename, cwlist, cw_cnt, last):
-    dnsMAC, dnsIP = getinfo.dst_addrs()
+    dnsMAC, dnsIP = config.dst_addrs()
     whohas_pre = filename + '.' + str(cw_cnt) + '.'
     for cw in range(cw_cnt):
         for i in range(15):
@@ -38,7 +38,7 @@ def sniff_ip6_DstEH(s):
             idle_time = time.time() # renew timer
         else:
             try:
-                if time.time() - idle_time > 3: # if idle time > 5 sec
+                if time.time() - idle_time > 5: # if idle time > 5 sec
                     break
             except:
                 continue

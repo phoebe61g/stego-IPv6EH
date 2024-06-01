@@ -1,4 +1,9 @@
 from scapy.all import *
+N = 255
+K = 223
+T = (N - K)//2
+Timer = 1
+
 def src_addrs():
     clientMAC = bytes.fromhex(get_if_hwaddr(conf.iface).replace(':',''))
     clientIP = get_if_addr6(conf.iface)

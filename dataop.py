@@ -1,4 +1,5 @@
 from scapy.all import *
+from config import N, T
 '''
 def convert_frame_pkt(frame_buff):
     pkts_buff = []
@@ -7,19 +8,20 @@ def convert_frame_pkt(frame_buff):
         pkts_buff.append(pkt)
     return pkts_buff
 '''
+
 def extract_RR(frame):
     pkt = Ether(frame)
     try:
         RR = pkt.getlayer(DNS).qd.qname.split(b'.')
         filename = RR[0] + b'.' + RR[1]
         cw_cnt = int(RR[2])
-        last = int(RR[4])
+        pad_bytes = int(RR[4])
     except:
         print("RR not found.")
-    return filename, cw_cnt, last
+    return filename, cw_cnt, pad_bytes
 
 def extract_cw(frame_buff, cw_cnt):
-    cw_list = ([b'0'*16] * 15 + [b'0'*15]) * cw_cnt
+    cw_list = ([b'0' * T] * (N//T) + [b'0' * (N%T)]) * cw_cnt
     for frame in frame_buff:
         try:
             pkt = Ether(frame)
@@ -29,7 +31,7 @@ def extract_cw(frame_buff, cw_cnt):
             # Position of data
             RR = pkt.getlayer(DNS).qd.qname.split(b'.')
             dnsID = pkt.getlayer(DNS).id
-            index = int(RR[3]) * 16 + dnsID
+            index = int(RR[3]) * (N//T + 1) + dnsID
             # Collect in buffer
             cw_list[index] = data
         except:

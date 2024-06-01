@@ -12,6 +12,14 @@ def bin_split(filename):
     bin_file.close()
     return msglist, last
 
+def del_padding(filename, num_bytes):
+    with open(filename, 'rb') as file:
+        file.seek(0, 2) 
+        file_size = file.tell()
+    new_size = max(file_size - num_bytes, 0)
+    with open(filename, 'ab') as file:
+        file.truncate(new_size)
+'''
 def bin_collect(decdata, cw_cnt, last):
     collect_data = b''
     for i in range(cw_cnt - 1):
@@ -24,3 +32,4 @@ def generate(filename, collect_data):
     bin_file.write(collect_data)
     bin_file.close()
     return True
+'''

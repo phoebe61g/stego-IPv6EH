@@ -3,45 +3,43 @@ import time
 import socket
 import dataop, fileop, pktop
 import reedsolomon as rs
-codec = rs.set_codec(255, 223)
-# Packet Sniffer
+from config import N, K, T, Timer
+codec = rs.set_codec(N, K)
+
+# Packet Collector
+T_collector = time.time()
+print("Sniffing...")
 s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(3))
 s.bind((str(conf.iface), 0))
-print("Start sniffing...")
-T_sniff = time.time() # Timer
 frame_buff = pktop.sniff_ip6_DstEH(s)
 s.close()
-print("Done. Sniffed {} frames.".format(len(frame_buff)))
-# Codeword Collection 
-print("Start extracting data...")
-T_extract = time.time() # Timer
-filename, cw_cnt, last = dataop.extract_RR(frame_buff[0])
+print("---> Sniffed {} frames.".format(len(frame_buff)))
+
+# Codeword Extraction
+print("Extracting codewords...")
+filename, cw_cnt, pad_bytes = dataop.extract_RR(frame_buff[0])
 cw_list = dataop.extract_cw(frame_buff, cw_cnt)
-print("Done.")
-# RS Decoder
-print("Start decoding data...")
-T_decode = time.time() # Timer
-data_list = []
-for cw_index in range(cw_cnt):
+
+# RS Decoder & File Composer
+print("Decoding...")
+T_decoder = time.time() 
+bin_file = open(filename, 'wb+')
+for chunk_num in range(cw_cnt):
     try:
-        codeword = b''.join(cw_list[cw_index * 16:cw_index * 16 + 16]) 
-        dec_data = rs.decoder(codeword, codec)
-        # Data Collection
-        data_list.append(dec_data)
+        count = N//T + 1
+        codeword = b''.join(cw_list[chunk_num * count:chunk_num * count + count]) 
+        chunk = rs.decoder(codeword, codec)
+        bin_file.write(chunk)
     except:
-        print("Codeword[{}] couldn't be decoded.".format(cw_index))
+        print("Codeword[{}] couldn't be decoded.".format(chunk_num))
+bin_file.close()
+fileop.del_padding(filename, pad_bytes)
+T_end = time.time()
 print("Done.")
-# File Generator
-print("Start generating the original file...")
-T_file = time.time() # Timer
-collect_data = fileop.bin_collect(data_list, cw_cnt, last)
-fileop.generate(filename, collect_data)
-T_end = time.time() # Timer
-print("Done.")
-print("------ Time Consuming ------")
-print("Sniffing packets: {:.2f} seconds.".format(T_extract - T_sniff))
-print("Extracting codeword: {:.2f} seconds.".format(T_decode - T_extract))
-print("Decoding data: {:.2f} seconds.".format(T_file - T_decode))
-print("Generating file: {:.2f} seconds.".format(T_end - T_file))
-print("Totally spent {:.2f} seconds.".format(T_end - T_sniff))
+
+if Timer:
+    print("------ Time Consuming ------")
+    print("Packet Collector: {:.2f} seconds.".format(T_decoder - T_collector))
+    print("RS Decoder & File Composer: {:.2f} seconds.".format(T_end - T_decoder))
+    print("Totally spent {:.2f} seconds.".format(T_end - T_collector))
 exit()
