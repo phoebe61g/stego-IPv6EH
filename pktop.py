@@ -2,19 +2,20 @@ import time
 import socket
 import config
 from scapy.all import *
+slice_cnt = N//T + 1
 def generate_send(filename, cw_list, cw_cnt, pad_bytes):
-    dnsIP = getinfo.dst_addrs()
+    dnsIP = config.dst_addrs()
     fqdn_prefix = filename + '.' + str(cw_cnt) + '.'
     fqdn_suffix = '.' + str(pad_bytes) + '.pearl.org'
     for chunk_num in range(cw_cnt):
-        for slice in range(16):
+        for slice in range(slice_cnt):
             fqdn = fqdn_prefix + str(chunk_num) + fqdn_suffix
             pkt = IPv6(dst=dnsIP)/ \
                   IPv6ExtHdrDestOpt(options=PadN(otype=30, optdata=cw_list[chunk_num][slice]))/ \
                   UDP(dport=53)/ \
                   DNS(id=slice, qd=DNSQR(qname=fqdn, qtype="A"))
             send(pkt, verbose=0)
-            print("Transfer progress: packet index [{}]".format(chunk_num * 16 + slice), end = '\r')
+            print("Transfer progress: packet index [{}]".format(chunk_num * slice_cnt + slice), end = '\r')
     return True
 
 def pkt_loss_send(filename, cwlist, cw_cnt, last):
