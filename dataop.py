@@ -1,13 +1,5 @@
 from scapy.all import *
 from config import N, T
-'''
-def convert_frame_pkt(frame_buff):
-    pkts_buff = []
-    for frame in frame_buff:
-        pkt = Ether(frame)
-        pkts_buff.append(pkt)
-    return pkts_buff
-'''
 
 def extract_RR(frame):
     pkt = Ether(frame)
@@ -25,21 +17,23 @@ def extract_cw(frame_buff, cw_cnt):
     for frame in frame_buff:
         try:
             pkt = Ether(frame)
-            # Data
+            # Get slice
             padn = pkt.getlayer(IPv6ExtHdrDestOpt).options[0]
-            data = padn.optdata # 16-bytes
-            # Position of data
+            slice = padn.optdata
+            # Get position of slice
             RR = pkt.getlayer(DNS).qd.qname.split(b'.')
             dnsID = pkt.getlayer(DNS).id
             index = int(RR[3]) * (N//T + 1) + dnsID
-            # Collect in buffer
-            cw_list[index] = data
+            # Store slice in list
+            cw_list[index] = slice
         except:
             pass
     return cw_list
 
+'''
 def find_missing_cw(data_buff):
     for index in range(len(data_buff)):
         if data_buff[index] == b'0':
             print("Missing pkt no.{}".format(index))
     return 0
+'''

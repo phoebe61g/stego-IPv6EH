@@ -2,6 +2,7 @@ import time
 import socket
 from config import *
 from scapy.all import *
+
 slice_cnt = N//T + 1
 def generate_send(filename, cw_list, cw_cnt, pad_bytes):
     dnsIP = dst_addrs()
@@ -18,6 +19,7 @@ def generate_send(filename, cw_list, cw_cnt, pad_bytes):
             print("Transfer progress: packet index [{}]".format(chunk_num * slice_cnt + slice), end = '\r')
     return True
 
+'''
 def pkt_loss_send(filename, cwlist, cw_cnt, last):
     dnsMAC, dnsIP = config.dst_addrs()
     whohas_pre = filename + '.' + str(cw_cnt) + '.'
@@ -28,6 +30,7 @@ def pkt_loss_send(filename, cwlist, cw_cnt, last):
             send(pkt, verbose=0)
             print("Packets sended: index [{}]".format(cw * 16 + i), end = '\r')
     return cw_cnt*15
+'''
 
 def sniff_ip6_DstEH(s):
     frame_buff = []
@@ -44,6 +47,7 @@ def sniff_ip6_DstEH(s):
                 continue
     return frame_buff
 
+'''
 def sniff_ip6(s, start, timelimit):
     frame_buff = []
     while (time.time() - start) < timelimit:
@@ -64,3 +68,4 @@ def sniff_dns(s):
         except:
             continue
     return cnt
+'''
