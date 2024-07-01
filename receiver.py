@@ -1,63 +1,48 @@
 #!/usr/bin/python
-import sys
 import time
 import socket
-from scapy.all import *
-# Sniff the packets
+import dataop, fileop, pktop
+import reedsolomon as rs
+from config import N, K, T, Timer
+codec = rs.set_codec(N, K)
+
+# Packet Collector
+print("Sniffing...")
+T_collector = time.time()
 s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(3))
-s.bind(('ens160', 0))
-frame_buff = []
-timelimit = int(sys.argv[1])
-start = time.time() # Timer
-print("Start sniffing...")
-while (time.time() - start) < timelimit: 
-    frame, addr = s.recvfrom(512)
-    if frame[12:14] == b'\x86\xdd': # Filter for IPv6
-        frame_buff.append(frame)
+s.bind((str(conf.iface), 0))
+frame_buff = pktop.sniff_ip6_DstEH(s)
 s.close()
-print("Stop sniffing. Start collecting data...")
-# Collect if they're DNS packets
-timestamp = time.time()
-pkts_buff = []
-for frame in frame_buff:
-    pkt = Ether(frame) # Normalize to Scapy packet format
+print("---> Sniffed {} frames.".format(len(frame_buff)))
+
+# Codeword Extractor
+print("Extracting codewords...")
+T_extractor = time.time()
+filename, cw_cnt, pad_bytes = dataop.extract_RR(frame_buff[0])
+cw_list = dataop.extract_cw(frame_buff, cw_cnt)
+
+# RS Decoder & File Composer 
+print("Decoding...")
+T_decoder = time.time() 
+bin_file = open(filename, 'wb+')
+for chunk_num in range(cw_cnt):
     try:
-        if pkt.getlayer(UDP).dport == 53:
-            pkts_buff.append(pkt)
+        slice_cnt = N//T + 1
+        codeword = b''.join(cw_list[chunk_num * slice_cnt:chunk_num * slice_cnt + slice_cnt]) 
+        chunk = rs.decoder(codeword, codec)
+        if chunk_num == (cw_cnt - 1):
+            chunk = chunk[:K - pad_bytes]
+        bin_file.write(chunk)
     except:
-        pass
-if pkts_buff:
-    pktl = PacketList(pkts_buff)
-else:
-    exit() # No special packets received
-print(pktl.summary)
-# Extract the data from packets
-filename = ""
-collect_data = b''
-data_buff = {}
-error_cnt = 0
-for pkt in pktl:
-    try:
-        padn = pkt.getlayer(IPv6ExtHdrDestOpt).options[0]
-        data = padn.optdata
-        dnsID = pkt.getlayer(DNS).id
-        if dnsID == 0:
-            filename = data
-        else:
-            data_buff[dnsID - 1] = data
-    except:
-        pass
-# Combine data into a binary file
-for i in range(0, len(data_buff)):
-    try:
-        collect_data = collect_data + data_buff[i]
-    except:
-        #print("Error happened while processing packet no.{}".format(i))
-        error_cnt = error_cnt + 1
-stop = time.time()
-print("Time for collection: {:.2f} seconds.".format(stop - timestamp))
-print("Lost {} data from packets. Start building file...".format(error_cnt))
-rebuild = open(filename, 'wb+')
-rebuild.write(collect_data)
-rebuild.close()
-print("Finished.")
+        print("Codeword[{}] couldn't be decoded.".format(chunk_num))
+bin_file.close()
+T_end = time.time()
+print("File '{}' created.".format(filename.decode("utf-8")))
+
+if Timer:
+    print("------ Time Consuming ------")
+    print("Packet Collector : {:.2f} seconds.".format(T_extractor- T_collector))
+    print("Codeword Extractor: {:.2f} seconds.".format(T_decoder - T_extractor))
+    print("RS Decoder & File Composer: {:.2f} seconds.".format(T_end - T_decoder))
+    print("Totally spent {:.2f} seconds.".format(T_end - T_collector))
+exit()
