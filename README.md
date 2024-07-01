@@ -2,6 +2,11 @@
 The implementation of my research "On the Reduction of Overhead Ratio Incurred by Forward Error Correction in IPv6 Extension Header Steganography".
 This is used only to verify the effectiveness of the steganography method.
 
+## Requirements
+- Ubuntu 20.04.6 LTS
+- IPv6 availability
+- Root privileges
+
 ## Usage
 1. Clone the repository first.
 2. (Optional) Set up Bind9 on the receiver side.
